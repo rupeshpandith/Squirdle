@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🟩 SQUIRDLE
+# SQUIRDLE
 
 **A daily word puzzle game — guess the 5-letter word in 6 tries.**
 
