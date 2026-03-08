@@ -1,0 +1,1287 @@
+/* ── THEME VARIABLES ─────────────────────────────────────────────── */
+/* Dark mode colors (default) */
+.app.dark {
+  --bg:                #121213;
+  --surface:           #1a1a1b;
+  --border-empty:      #3a3a3c;
+  --border-filled:     #565758;
+  --tile-text:         #ffffff;
+  --tile-bg:           #121213;
+
+  --key-bg:            #818384;
+  --key-bg-wide:       #565758;
+  --key-border-wide:   #8E9091;
+  --key-text:          #ffffff;
+
+  --correct:           #538d4e;   /* green  — exact Wordle dark value */
+  --present:           #b59f3b;   /* yellow — exact Wordle dark value */
+  --absent:            #3a3a3c;   /* grey   — exact Wordle dark value */
+
+  --text-primary:      #ffffff;
+  --text-secondary:    #818384;
+  --icon-color:        #AAAAAA;
+  --header-border:     #3a3a3c;
+  --modal-bg:          #121213;
+  --modal-border:      #3a3a3c;
+  --overlay:           rgba(0, 0, 0, 0.7);
+}
+
+/* ── LIGHT THEME ─────────────────────────────────────────────────── */
+.app.light {
+  --bg:                #ffffff;
+  --surface:           #ffffff;
+  --border-empty:      #d3d6da;
+  --border-filled:     #878a8c;
+  --tile-text:         #000000;
+  --tile-bg:           #ffffff;
+
+  --key-bg:            #d3d6da;
+  --key-bg-wide:       #878A8C;
+  --key-border-wide:   #878A8C;
+  --key-text:          #000000;
+
+  --correct:           #6aaa64;   /* green  — exact Wordle light value */
+  --present:           #c9b458;   /* yellow — exact Wordle light value */
+  --absent:            #787c7e;   /* grey   — exact Wordle light value */
+
+  --text-primary:      #000000;
+  --text-secondary:    #787c7e;
+  --icon-color:        #787C7E;
+  --header-border:     #d3d6da;
+  --modal-bg:          #ffffff;
+  --modal-border:      #d3d6da;
+  --overlay:           rgba(0, 0, 0, 0.5);
+}
+
+/* ── GLOBAL RESET ─────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Anton', 'Clear Sans', 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* ── APP LAYOUT ──────────────────────────────────────────────────── */
+.app {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  /* 100dvh = dynamic viewport height — accounts for mobile browser chrome */
+  /* On iOS, 100vh is sometimes too tall (goes behind the address bar) */
+  /* 100dvh shrinks to the actual visible area */
+  height: 100dvh;
+
+  max-width: 500px;
+  margin: 0 auto;
+  position: relative;          /* needed for modal z-index stacking */
+
+  background: var(--bg);
+  color: var(--text-primary);
+
+  /* Smooth theme transition */
+  transition: background-color 0.25s ease, color 0.25s ease;
+
+  /* Prevent rubber-band scrolling on the app container itself */
+  overflow: hidden;
+  touch-action: manipulation;  /* prevents 300ms tap delay on mobile */
+
+  /* Capacitor safe areas — accounts for notch, rounded corners, home bar */
+  padding-top: env(safe-area-inset-top);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* ── HEADER ──────────────────────────────────────────────────────── */
+.header {
+  width: 100%;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--header-border);
+  background: var(--bg);
+  flex-shrink: 0;              /* never shrink, even on small screens */
+  transition: background-color 0.25s ease, border-color 0.25s ease;
+}
+
+.header-left,
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.header-left {
+  width: 40px;
+}
+
+.header-right {
+  justify-content: flex-end;
+}
+
+/* ── TITLE TILES (mini colored tiles spelling WORDLE) ────────────── */
+.title-tiles {
+  display: flex;
+  gap: 3px;
+}
+
+.title-tile {
+  width: 28px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Anton', sans-serif;
+  font-size: 18px;
+  font-weight: normal;
+  color: #ffffff;
+  border-radius: 2px;
+}
+
+.title-tile.correct { background: var(--correct); }
+.title-tile.present { background: var(--present); }
+.title-tile.absent  { background: var(--absent); }
+
+.icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  color: var(--icon-color);
+  font-size: 1.1rem;
+  transition: background-color 0.15s ease, color 0.25s ease;
+}
+
+.icon-btn .material-symbols-rounded {
+  font-size: 22px;
+  color: var(--icon-color);
+}
+
+.icon-btn:hover {
+  background: var(--border-empty);
+}
+
+.icon-btn:active {
+  transform: scale(0.93);
+}
+
+/* ── BOARD ───────────────────────────────────────────────────────── */
+.board {
+  flex: 1;                     /* fills all space between header and keyboard */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;                    /* gap between rows — matches design */
+  padding: 12px 0;
+}
+
+.board-row {
+  display: flex;
+  gap: 5px;                    /* gap between tiles */
+}
+
+/* ── SHAKE ANIMATION ─────────────────────────────────────────────── */
+/* Fires when player submits an invalid word (wrong length or not in list) */
+.board-row.shake {
+  animation: row-shake 0.6s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes row-shake {
+  0%, 100%  { transform: translateX(0);    }
+  15%        { transform: translateX(-8px); }
+  30%        { transform: translateX(7px);  }
+  45%        { transform: translateX(-6px); }
+  60%        { transform: translateX(5px);  }
+  75%        { transform: translateX(-3px); }
+  90%        { transform: translateX(2px);  }
+}
+
+/* ── TILE BASE ───────────────────────────────────────────────────── */
+.tile {
+  /* Tile size from design */
+  width: 60px;
+  height: 60px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-family: 'Anton', sans-serif;
+  font-size: 32px;
+  font-weight: normal;
+  text-transform: uppercase;
+  line-height: 1;
+
+  color: var(--tile-text);
+  background: var(--tile-bg);
+  border: 2px solid var(--border-empty);
+
+  /* Flip animation base — perspective makes the 3D rotation look realistic */
+  transition:
+    background-color 0s,
+    border-color 0s,
+    color 0s;
+
+  /* Prevent any interaction with tiles */
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ── STATE: FILLED ───────────────────────────────────────────────── */
+/* Tile has a letter typed (current row, pre-submission) */
+.tile.filled {
+  border-color: var(--border-filled);
+  animation: tile-pop 0.08s ease-in-out;
+}
+
+/* ── STATE: FLIPPING ─────────────────────────────────────────────── */
+/* Tile is mid-animation during reveal */
+.tile.flipping {
+  animation: tile-flip 0.5s ease-in-out forwards;
+}
+
+/* ── STATE: CORRECT (green) ──────────────────────────────────────── */
+.tile.correct {
+  background: var(--correct);
+  border-color: var(--correct);
+  color: #ffffff;
+}
+
+/* ── STATE: PRESENT (yellow) ─────────────────────────────────────── */
+.tile.present {
+  background: var(--present);
+  border-color: var(--present);
+  color: #ffffff;
+}
+
+/* ── STATE: ABSENT (grey) ────────────────────────────────────────── */
+.tile.absent {
+  background: var(--absent);
+  border-color: var(--absent);
+  color: #ffffff;
+}
+
+/* ── TILE POP ANIMATION ──────────────────────────────────────────── */
+@keyframes tile-pop {
+  0%   { transform: scale(1);     }
+  40%  { transform: scale(1.12);  }
+  100% { transform: scale(1);     }
+}
+
+/* ── TILE BOUNCE ANIMATION (win row) ─────────────────────────────── */
+.tile.bouncing {
+  animation: tile-bounce 0.6s ease forwards;
+}
+
+@keyframes tile-bounce {
+  0%   { transform: translateY(0); }
+  25%  { transform: translateY(-20px); }
+  50%  { transform: translateY(4px); }
+  70%  { transform: translateY(-8px); }
+  100% { transform: translateY(0); }
+}
+
+/* ── TILE FLIP ANIMATION ─────────────────────────────────────────── */
+/* 3D rotate on X axis — tile tips away then comes back with color */
+/* The color swap happens at exactly 50% (when tile is edge-on, invisible) */
+@keyframes tile-flip {
+  0%   {
+    transform: rotateX(0deg);
+  }
+  49% {
+    transform: rotateX(-90deg);
+    /* Just before the midpoint — tile is edge-on (invisible)
+       This is where the color change happens in Tile.jsx (setRevealed)
+       So the color appears to flip in as the tile rotates back */
+  }
+  51% {
+    transform: rotateX(-90deg);
+  }
+  100% {
+    transform: rotateX(0deg);
+  }
+}
+
+/* ── KEYBOARD CONTAINER ──────────────────────────────────────────── */
+.keyboard {
+  width: 100%;
+  max-width: 500px;
+  padding: 4px 0 24px;
+  padding-bottom: max(24px, env(safe-area-inset-bottom));  /* Capacitor home bar */
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+  transition: background-color 0.25s ease;
+}
+
+.keyboard-row {
+  display: flex;
+  justify-content: center;
+  gap: 5px;                    /* matches design gap */
+}
+
+/* Middle row (ASDF...) is indented like real Wordle keyboard */
+.keyboard-row-middle {
+  padding: 0 20px;
+}
+
+/* ── KEY BASE ────────────────────────────────────────────────────── */
+.key {
+  height: 58px;
+  min-width: 0;                /* allow keys to shrink on small screens */
+  flex: 1;                     /* keys share available width equally */
+  max-width: 43px;             /* cap so they don't stretch too wide */
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-family: 'Anton', sans-serif;
+  font-size: 14px;
+  font-weight: normal;
+  text-transform: uppercase;
+  letter-spacing: 0;
+
+  color: var(--key-text);
+  background: var(--key-bg);
+  border-radius: 4px;
+  border: none;
+
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+
+  /* Color change on reveal */
+  transition: background-color 0.3s ease, color 0.3s ease, transform 0.1s ease;
+}
+
+/* ── WIDE KEYS: ENTER + BACKSPACE ────────────────────────────────── */
+.key-wide {
+  min-width: 0;
+  flex: 1.5;                   /* wide keys get 1.5× share of available space */
+  max-width: 65px;
+  font-size: 11px;
+  letter-spacing: 1px;
+  background: var(--key-bg-wide);
+  border: 1px solid var(--key-border-wide);
+}
+
+.backspace-icon {
+  font-size: 24px;
+}
+
+/* ── KEY COLOR STATES ────────────────────────────────────────────── */
+.key.correct {
+  background: var(--correct);
+  color: #ffffff;
+}
+
+.key.present {
+  background: var(--present);
+  color: #ffffff;
+}
+
+.key.absent {
+  background: var(--absent);
+  color: #ffffff;
+}
+
+/* ── KEY PRESS STATES ────────────────────────────────────────────── */
+.key:active {
+  transform: scale(0.95);
+  filter: brightness(0.88);
+}
+
+/* Colored keys press darker */
+.key.correct:active,
+.key.present:active,
+.key.absent:active {
+  filter: brightness(0.82);
+}
+
+/* ── MODAL OVERLAY ───────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay);
+
+  /* Frosted glass blur effect on the background */
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+
+  animation: overlay-fade 0.3s ease forwards;
+}
+
+/* ── MODAL CARD ──────────────────────────────────────────────────── */
+.modal {
+  background: var(--modal-bg);
+  border: 1px solid var(--modal-border);
+  border-radius: 16px;
+  padding: 36px 44px;
+  text-align: center;
+  color: var(--text-primary);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+
+  min-width: 280px;
+  max-width: 340px;
+  width: 90%;
+
+  /* Card entrance — slides up slightly while fading in */
+  animation: modal-enter 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  /* cubic-bezier here creates a slight overshoot (spring feel) */
+
+  transition: background-color 0.25s ease, border-color 0.25s ease;
+}
+
+.modal-title {
+  font-family: 'Anton', sans-serif;
+  font-size: 1.5rem;
+  font-weight: normal;
+  text-transform: uppercase;
+  letter-spacing: 0.1rem;
+  color: var(--text-primary);
+}
+
+.modal-subtitle {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.solution-reveal {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 1.4rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.15rem;
+  color: var(--correct);
+}
+
+/* ── DIVIDER ─────────────────────────────────────────────────────── */
+.modal-divider {
+  width: 100%;
+  height: 1px;
+  background: var(--modal-border);
+}
+
+/* ── PLAY AGAIN BUTTON ───────────────────────────────────────────── */
+.modal-btn {
+  width: 100%;
+  padding: 16px 32px;
+  background: var(--correct);
+  color: #ffffff;
+  border-radius: 6px;
+  font-family: 'Anton', sans-serif;
+  font-size: 0.95rem;
+  font-weight: normal;
+  text-transform: uppercase;
+  letter-spacing: 0.08rem;
+  cursor: pointer;
+  transition: filter 0.15s ease, transform 0.1s ease;
+  margin-top: 4px;
+}
+
+.modal-btn:hover {
+  filter: brightness(1.1);
+}
+
+.modal-btn:active {
+  transform: scale(0.97);
+  filter: brightness(0.9);
+}
+
+/* ── MODAL — COMEBACK MESSAGE (win state) ────────────────────────── */
+.modal-comeback {
+  font-family: 'Anton', sans-serif;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  text-align: center;
+  line-height: 1.5;
+  margin-top: 4px;
+}
+
+/* ── MODAL — SOLUTION REVEAL ROW (lose state) ────────────────────── */
+.modal-solution-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.modal-reveal-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  transition: background-color 0.15s ease;
+}
+
+.modal-reveal-btn .material-symbols-rounded {
+  font-size: 20px;
+}
+
+.modal-reveal-btn:hover {
+  background: var(--border-empty);
+}
+
+.modal-reveal-btn-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--border-filled);
+  color: var(--text-secondary);
+  font-family: 'Anton', sans-serif;
+  font-size: 0.85rem;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.modal-reveal-btn-text .material-symbols-rounded {
+  font-size: 18px;
+}
+
+.modal-reveal-btn-text:hover {
+  border-color: var(--text-secondary);
+  color: var(--text-primary);
+}
+
+/* ── MODAL ANIMATIONS ────────────────────────────────────────────── */
+@keyframes overlay-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes modal-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.88) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* ── TOAST NOTIFICATION ──────────────────────────────────────────── */
+.toast {
+  position: absolute;
+  top: 72px;                   /* just below the header */
+  left: 50%;
+  transform: translateX(-50%);
+
+  background: var(--text-primary);
+  color: var(--bg);
+
+  padding: 12px 20px;
+  border-radius: 6px;
+  font-family: 'Anton', sans-serif;
+  font-size: 0.85rem;
+  font-weight: normal;
+  text-transform: uppercase;
+  letter-spacing: 0.05rem;
+  white-space: nowrap;
+
+  z-index: 500;
+  pointer-events: none;        /* doesn't block clicks/taps */
+
+  animation: toast-in 0.2s ease forwards;
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(-8px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0);    }
+}
+
+/* ── MOBILE RESPONSIVE ───────────────────────────────────────────── */
+/* ── MOBILE RESPONSIVE ───────────────────────────────────────────── */
+@media (max-width: 400px) {
+  .tile {
+    width: 52px;
+    height: 52px;
+    font-size: 26px;
+  }
+
+  .keyboard-row {
+    gap: 4px;
+  }
+
+  .keyboard-row-middle {
+    padding: 0 14px;
+  }
+
+  .key {
+    height: 52px;
+    font-size: 12px;
+  }
+
+  .key-wide {
+    font-size: 10px;
+  }
+
+  .title-tile {
+    width: 22px;
+    height: 28px;
+    font-size: 14px;
+  }
+}
+
+@media (max-height: 700px) {
+  .board {
+    gap: 4px;
+    padding: 8px 0;
+  }
+
+  .tile {
+    width: 50px;
+    height: 50px;
+    font-size: 24px;
+  }
+
+  .key {
+    height: 48px;
+  }
+
+  .keyboard {
+    gap: 6px;
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════ */
+/*   HOME PAGE                                                        */
+/* ═══════════════════════════════════════════════════════════════════ */
+
+.home {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.home-theme-toggle {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 10;
+  display: flex;
+  gap: 4px;
+}
+
+.home-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 40px 32px 40px;
+  gap: 0;
+}
+
+/* ── LOGO TILES ────────────────────────────────────────────────── */
+.home-logo-tiles {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  align-items: center;
+  height: 50px;
+  filter: drop-shadow(0 0 40px var(--correct-glow, rgba(83, 141, 78, 0.19)));
+  margin-bottom: 16px;
+}
+
+.app.dark { --correct-glow: rgba(83, 141, 78, 0.19); }
+.app.light { --correct-glow: rgba(106, 170, 100, 0.19); }
+
+.home-logo-tile {
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Anton', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  color: #ffffff;
+  border-radius: 4px;
+  opacity: 0;
+  transform: scale(0.5) rotateX(-90deg);
+  transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.home-logo-tile.visible {
+  opacity: 1;
+  transform: scale(1) rotateX(0deg);
+}
+
+.home-logo-tile.correct { background: var(--correct); }
+.home-logo-tile.present { background: var(--present); }
+.home-logo-tile.absent  { background: var(--absent); }
+
+/* ── SUBTITLE ──────────────────────────────────────────────────── */
+.home-subtitle {
+  font-family: 'Anton', sans-serif;
+  font-size: 17px;
+  color: var(--text-secondary);
+  text-align: center;
+  line-height: 1.6;
+  margin-bottom: 32px;
+}
+
+/* ── DIVIDER ───────────────────────────────────────────────────── */
+.home-divider {
+  width: 100%;
+  height: 1px;
+  background: var(--header-border);
+  margin-bottom: 24px;
+}
+
+/* ── PUZZLE INFO ───────────────────────────────────────────────── */
+.home-puzzle-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 40px;
+}
+
+.home-date {
+  font-family: 'Anton', sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-primary);
+  text-align: center;
+}
+
+.home-puzzle-no {
+  font-family: 'Anton', sans-serif;
+  font-size: 14px;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+/* ── PLAY BUTTON ───────────────────────────────────────────────── */
+.home-play-btn {
+  width: 240px;
+  height: 54px;
+  background: var(--correct);
+  color: #ffffff;
+  border: none;
+  border-radius: 26px;
+  font-family: 'Anton', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: filter 0.15s ease, transform 0.1s ease;
+  margin-bottom: 16px;
+}
+
+.home-play-btn:hover {
+  filter: brightness(1.1);
+}
+
+.home-play-btn:active {
+  transform: scale(0.96);
+  filter: brightness(0.9);
+}
+
+.home-play-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: none;
+  transform: none;
+}
+
+/* ── HOW TO PLAY BUTTON ────────────────────────────────────────── */
+.home-htp-btn {
+  height: 44px;
+  padding: 0 24px;
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1.5px solid var(--border-filled);
+  border-radius: 22px;
+  font-family: 'Anton', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
+  margin-bottom: 32px;
+}
+
+.home-htp-btn:hover {
+  border-color: var(--text-secondary);
+  color: var(--text-primary);
+}
+
+.home-htp-btn:active {
+  transform: scale(0.96);
+}
+
+/* ── COLOR LEGEND ──────────────────────────────────────────────── */
+.home-legend {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.home-legend-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 20px;
+}
+
+.home-legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+}
+
+.home-legend-dot.correct { background: var(--correct); }
+.home-legend-dot.present { background: var(--present); }
+.home-legend-dot.absent  { background: var(--absent); }
+
+.home-legend-label {
+  font-family: 'Anton', sans-serif;
+  font-size: 12px;
+  color: var(--border-filled);
+}
+
+/* ── FOOTER ────────────────────────────────────────────────────── */
+.home-footer {
+  padding: 16px 0;
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+  text-align: center;
+  font-family: 'Anton', sans-serif;
+  font-size: 13px;
+  color: var(--border-filled);
+}
+
+.home-footer a {
+  color: var(--correct);
+  text-decoration: none;
+  font-weight: 500;
+  transition: opacity 0.15s ease;
+}
+
+.home-footer a:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
+/* ═══════════════════════════════════════════════════════════════════ */
+/*   HOW TO PLAY PANEL                                                */
+/* ═══════════════════════════════════════════════════════════════════ */
+
+.htp-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: overlay-fade 0.3s ease forwards;
+}
+
+.htp-panel {
+  background: var(--modal-bg);
+  border: 1px solid var(--modal-border);
+  border-radius: 16px;
+  padding: 28px 28px 24px;
+  width: 90%;
+  max-width: 380px;
+  max-height: 85vh;
+  overflow-y: auto;
+  position: relative;
+  color: var(--text-primary);
+  animation: modal-enter 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  transition: background-color 0.25s ease, border-color 0.25s ease;
+}
+
+.htp-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  color: var(--text-secondary);
+  transition: background-color 0.15s ease;
+}
+
+.htp-close .material-symbols-rounded {
+  font-size: 20px;
+}
+
+.htp-close:hover {
+  background: var(--border-empty);
+}
+
+.htp-title {
+  font-family: 'Anton', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.htp-subtitle {
+  font-family: 'Anton', sans-serif;
+  font-size: 15px;
+  color: var(--text-secondary);
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.htp-divider {
+  width: 100%;
+  height: 1px;
+  background: var(--modal-border);
+  margin: 16px 0;
+}
+
+.htp-rules {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-family: 'Anton', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.htp-rules li::before {
+  content: '•';
+  margin-right: 8px;
+  color: var(--text-secondary);
+}
+
+.htp-section-title {
+  font-family: 'Anton', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+
+.htp-example {
+  margin-bottom: 16px;
+}
+
+.htp-example-tiles {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.htp-tile {
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Anton', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--tile-text);
+  border: 2px solid var(--border-empty);
+  border-radius: 2px;
+  text-transform: uppercase;
+}
+
+.htp-tile.correct {
+  background: var(--correct);
+  border-color: var(--correct);
+  color: #ffffff;
+}
+
+.htp-tile.present {
+  background: var(--present);
+  border-color: var(--present);
+  color: #ffffff;
+}
+
+.htp-tile.absent {
+  background: var(--absent);
+  border-color: var(--absent);
+  color: #ffffff;
+}
+
+.htp-example-desc {
+  font-family: 'Anton', sans-serif;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.htp-footer-note {
+  font-family: 'Anton', sans-serif;
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-align: center;
+  line-height: 1.6;
+}
+
+/* ═══════════════════════════════════════════════════════════════════ */
+/*   STATS PANEL                                                       */
+/* ═══════════════════════════════════════════════════════════════════ */
+
+.stats-summary {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 4px;
+}
+
+.stats-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 56px;
+}
+
+.stats-number {
+  font-family: 'Anton', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.stats-label {
+  font-family: 'Anton', sans-serif;
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.03rem;
+}
+
+.stats-distribution {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+
+.stats-dist-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stats-dist-label {
+  font-family: 'Anton', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  width: 14px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.stats-dist-bar-track {
+  flex: 1;
+}
+
+.stats-dist-bar {
+  background: var(--border-empty);
+  color: #ffffff;
+  font-family: 'Anton', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 2px;
+  text-align: right;
+  min-width: 20px;
+  transition: width 0.4s ease;
+}
+
+.stats-dist-bar.filled {
+  background: var(--correct);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════ */
+/*   CALENDAR HEATMAP                                                  */
+/* ═══════════════════════════════════════════════════════════════════ */
+
+.cal-heatmap {
+  width: 100%;
+}
+
+/* ── TABS ──────────────────────────────────────────────────────── */
+.cal-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 12px;
+  justify-content: center;
+}
+
+.cal-tab {
+  padding: 5px 14px;
+  border-radius: 14px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  background: var(--border-empty);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.cal-tab.active {
+  background: var(--correct);
+  color: #ffffff;
+}
+
+.cal-tab:hover:not(.active) {
+  background: var(--border-filled);
+  color: var(--text-primary);
+}
+
+/* ── MONTH TITLE ───────────────────────────────────────────────── */
+.cal-month-title {
+  text-align: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 10px;
+  letter-spacing: 0.02em;
+}
+
+/* ── GRID ──────────────────────────────────────────────────────── */
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.cal-day-header {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  padding-bottom: 4px;
+  text-transform: uppercase;
+}
+
+/* ── CELLS ─────────────────────────────────────────────────────── */
+.cal-cell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  transition: background 0.15s ease;
+}
+
+.cal-cell.blank {
+  background: transparent;
+}
+
+.cal-cell.unattempted {
+  background: var(--border-empty);
+  color: var(--text-secondary);
+}
+
+.cal-cell.won {
+  background: var(--correct);
+  color: #ffffff;
+}
+
+.cal-cell.lost {
+  background: #d32f2f;
+  color: #ffffff;
+}
+
+.app.light .cal-cell.lost {
+  background: #e53935;
+}
+
+.cal-cell.future {
+  background: transparent;
+  border: 1px dashed var(--border-empty);
+  color: var(--border-filled);
+  opacity: 0.5;
+}
+
+.cal-cell.today {
+  outline: 2px solid var(--text-primary);
+  outline-offset: -1px;
+}
+
+/* ── LEGEND ────────────────────────────────────────────────────── */
+.cal-legend {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.cal-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.cal-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.cal-legend-dot.won {
+  background: var(--correct);
+}
+
+.cal-legend-dot.lost {
+  background: #d32f2f;
+}
+
+.app.light .cal-legend-dot.lost {
+  background: #e53935;
+}
+
+.cal-legend-dot.unattempted {
+  background: var(--border-empty);
+}

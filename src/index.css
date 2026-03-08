@@ -1,0 +1,57 @@
+/*   GOOGLE FONT
+   'Anton' — bold display font used throughout the Wordle UI.
+   Loaded via <link> in index.html for faster initial render.  */
+
+/*   UNIVERSAL RESET  */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/*   ROOT / HTML   */
+html {
+  /* Prevent font size inflation on iOS when rotating to landscape */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/*   BODY   */
+body {
+  font-family: 'Anton', 'Clear Sans', 'Helvetica Neue', Arial, sans-serif;
+
+  /* Prevent ALL scrolling — game is always exactly one screen */
+  overflow: hidden;
+  height: 100%;
+  width: 100%;
+
+  /* Prevent iOS Safari's rubber-band scroll effect */
+  overscroll-behavior: none;
+
+  /* Prevent text selection while tapping/clicking during gameplay */
+  user-select: none;
+  -webkit-user-select: none;
+
+  /* Smoother font rendering on macOS/iOS */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/*   BUTTON RESET   */
+/* Remove default browser button styles so we can style from scratch */
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  outline: none;
+  background: none;
+  -webkit-tap-highlight-color: transparent;
+  /* ↑ Removes the grey flash on mobile when tapping buttons */
+}
+
+/*   FOCUS VISIBLE   */
+/* Show focus ring only for keyboard navigation, not mouse clicks */
+button:focus-visible {
+  outline: 2px solid #6aaa64;
+  outline-offset: 2px;
+}

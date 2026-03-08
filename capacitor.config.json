@@ -1,0 +1,18 @@
+{
+  "appId": "com.rupesh.squirdle",
+  "appName": "Squirdle",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchAutoHide": true,
+      "backgroundColor": "#121213"
+    },
+    "LocalNotifications": {
+      "smallIcon": "ic_notification",
+      "iconColor": "#538d4e"
+    }
+  }
+}
